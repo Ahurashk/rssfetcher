@@ -27,7 +27,6 @@ def parse_feed(xml, feed_name):
                 "published_utc": ts,
                 "link": e.get("link", ""),
                 "raw_xml": str(e),
-                # no source_name – it's not in the schema
             })
         except Exception as ex:
             print(f"[WARN] Failed to parse entry: {ex}")
@@ -38,6 +37,12 @@ async def fetch_and_store(session, feed_name, feed_url):
         async with session.get(feed_url, timeout=10) as r:
             xml = await r.text()
         items = parse_feed(xml, feed_name)
+        print(f"[DEBUG] {feed_name} fetched {len(items)} entries")
+
+        if feed_name == "FinancialJuice":
+            for item in items[:3]:
+                print(f" - {item['title'][:60]}")
+
         for item in items:
             existing = supabase.table("items").select("id").eq("link", item["link"]).execute()
             if not existing.data:
