@@ -62,8 +62,14 @@ async def main():
             tasks = []
             for name, url, interval in feeds:
                 if now - last_run[url] >= interval:
-                    tasks.append(fetch_and_store(session, name, url))
-                    last_run[url] = now
+                    async def wrap(name=name, url=url):
+                        try:
+                            await fetch_and_store(session, name, url)
+                        except Exception as ex:
+                            print(f"[CRITICAL LOOP ERROR] {name}: {ex}")
+                        finally:
+                            last_run[url] = int(time.time())
+                    tasks.append(wrap())
             if tasks:
                 await asyncio.gather(*tasks)
             await asyncio.sleep(1)
