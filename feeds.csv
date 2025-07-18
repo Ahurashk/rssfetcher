@@ -1,11 +1,11 @@
 name,url,interval_sec
-FinancialJuice,https://www.financialjuice.com/feed.ashx?xy=rss,65
+FinancialJuice,https://www.financialjuice.com/feed.ashx?xy=rss,30
 Investing - General News,https://www.investing.com/rss/news_1.rss,60
 Investing - Earnings Reports,https://www.investing.com/rss/news_1062.rss,60
 Investing - Insider Trading,https://www.investing.com/rss/news_357.rss,60
 Investing - Economic Indicators,https://www.investing.com/rss/news_95.rss,60
 Investing - Economy,https://www.investing.com/rss/news_14.rss,60
-ForexLive,https://www.forexlive.com/feed,30
+ForexLive,https://www.forexlive.com/feed,20
 WSJ - Opinion,https://feeds.content.dowjones.io/public/rss/RSSOpinion,90
 WSJ - World News,https://feeds.content.dowjones.io/public/rss/RSSWorldNews,90
 WSJ - Market News,https://feeds.content.dowjones.io/public/rss/RSSMarketsMain,90
