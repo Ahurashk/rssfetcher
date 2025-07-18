@@ -1,6 +1,5 @@
 import asyncio, aiohttp, csv, time, os
-import feedparser
-from dateutil import parser as dtparser
+from datetime import datetime
 from supabase import create_client
 from dotenv import load_dotenv
 load_dotenv()
@@ -14,46 +13,22 @@ def load_feeds():
         reader = csv.DictReader(f)
         return [(row["name"], row["url"], int(row["interval_sec"])) for row in reader]
 
-def parse_feed(xml, feed_name):
-    parsed = feedparser.parse(xml)
-    entries = []
-    for e in parsed.entries:
-        try:
-            ts_raw = e.get("published") or e.get("updated") or ""
-            ts = dtparser.parse(ts_raw).astimezone().isoformat() if ts_raw else None
-            entries.append({
-                "title": e.get("title", ""),
-                "content": e.get("summary", "") or e.get("description", ""),
-                "published_utc": ts,
-                "link": e.get("link", ""),
-                "raw_xml": str(e),
-            })
-        except Exception as ex:
-            print(f"[WARN] Failed to parse entry: {ex}")
-    return entries
-
 async def fetch_and_store(session, feed_name, feed_url):
     try:
         async with session.get(feed_url, timeout=10) as r:
             xml = await r.text()
-        items = parse_feed(xml, feed_name)
-        print(f"[DEBUG] {feed_name} fetched {len(items)} entries")
-
-        if feed_name == "FinancialJuice":
-            for item in items[:3]:
-                print(f" - {item['title'][:60]}")
-
-        for item in items:
-            existing = supabase.table("items").select("id").eq("link", item["link"]).execute()
-            if not existing.data:
-                feed = supabase.table("feeds").select("id").eq("name", feed_name).execute()
-                if feed.data:
-                    item["feed_id"] = feed.data[0]["id"]
-                else:
-                    new_feed = supabase.table("feeds").insert({"name": feed_name, "url": feed_url}).execute()
-                    item["feed_id"] = new_feed.data[0]["id"]
-                supabase.table("items").insert(item).execute()
-                print(f"[{feed_name}] Inserted: {item['title'][:60]}")
+        feed = supabase.table("feeds").select("id").eq("name", feed_name).execute()
+        if feed.data:
+            feed_id = feed.data[0]["id"]
+        else:
+            new_feed = supabase.table("feeds").insert({"name": feed_name, "url": feed_url}).execute()
+            feed_id = new_feed.data[0]["id"]
+        supabase.table("raw_feeds").insert({
+            "feed_id": feed_id,
+            "fetched_at": datetime.utcnow().isoformat(),
+            "raw_xml": xml,
+        }).execute()
+        print(f"[{feed_name}] Raw XML saved at {datetime.utcnow().isoformat()}")
     except Exception as e:
         print(f"[ERROR] {feed_name}: {e}")
 
@@ -71,7 +46,7 @@ async def main():
                         try:
                             await fetch_and_store(session, name, url)
                         except Exception as ex:
-                            print(f"[CRITICAL LOOP ERROR] {name}: {ex}")
+                            print(f"[CRITICAL] {name}: {ex}")
                         finally:
                             last_run[url] = int(time.time())
                     tasks.append(wrap())
