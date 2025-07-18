@@ -1,5 +1,5 @@
 name,url,interval_sec
-FinancialJuice,https://www.financialjuice.com/feed.ashx?xy=rss,30
+FinancialJuice,https://www.financialjuice.com/feed.ashx?xy=rss,65
 Investing - General News,https://www.investing.com/rss/news_1.rss,60
 Investing - Earnings Reports,https://www.investing.com/rss/news_1062.rss,60
 Investing - Insider Trading,https://www.investing.com/rss/news_357.rss,60
